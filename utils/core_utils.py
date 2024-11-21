@@ -97,8 +97,6 @@ def train(datasets: tuple, cur: int, args: Namespace):
     if args.log_data:
         from tensorboardX import SummaryWriter
         writer = SummaryWriter(args.writer_dir, flush_secs=15)
-    
-
     else:
         writer = None
 
@@ -164,6 +162,10 @@ def train(datasets: tuple, cur: int, args: Namespace):
         from models.model_motcat import MOTCAT_Surv
         model_dict = {'ot_reg': args.ot_reg, 'ot_tau': args.ot_tau, 'ot_impl': args.ot_impl,'fusion': args.fusion, 'omic_sizes': args.omic_sizes, 'n_classes': args.n_classes}
         model = MOTCAT_Surv(**model_dict)
+    elif args.model_type == 'motcat_pgbf':
+        from models.model_pgbf import PGBF_Surv
+        model_dict = {'fusion': args.fusion, 'omic_sizes': args.omic_sizes, 'n_classes': args.n_classes}
+        model = PGBF_Surv(**model_dict)
     else:
         raise NotImplementedError
     
@@ -182,8 +184,7 @@ def train(datasets: tuple, cur: int, args: Namespace):
 
 
     print('\nInit Loaders...', end=' ')
-    train_loader = get_split_loader(train_split, training=True, testing = False, 
-        weighted = args.weighted_sample, mode=args.mode, batch_size=args.batch_size)
+    train_loader = get_split_loader(train_split, training=True, testing = False, weighted = args.weighted_sample, mode=args.mode, batch_size=args.batch_size)
     val_loader = get_split_loader(val_split,  testing = False, mode=args.mode, batch_size=args.batch_size)
     print('Done!')
 

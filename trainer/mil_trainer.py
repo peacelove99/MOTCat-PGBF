@@ -3,6 +3,56 @@ import torch
 
 import os
 from sksurv.metrics import concordance_index_censored
+from torch import nn
+
+
+def OGM_GE(args, epoch, model, h_path, h_omic):
+    relu = nn.ReLU(inplace=True)
+    tanh = nn.Tanh()
+
+    logits_path = model.classifier(h_path).unsqueeze(0)
+    logits_omic = model.classifier(h_omic).unsqueeze(0)
+
+    hazards_path = torch.sigmoid(logits_path)
+    hazards_omic = torch.sigmoid(logits_omic)
+
+    score_path = hazards_path/hazards_omic
+    score_omic = 1 / score_path
+    print('score_path:', score_path)
+    print('score_omic:', score_omic)
+
+    ratio_path = score_path / score_omic
+    ratio_omic = 1 / ratio_path
+    print('ratio_path:', ratio_path)
+    print('ratio_omic:', ratio_omic)
+
+    if ratio_path > 1:
+        coeff_path = 1 - tanh(args.alpha * relu(ratio_path))
+        coeff_omic = 1
+    else:
+        coeff_omic = 1 - tanh(args.alpha * relu(ratio_omic))
+        coeff_path = 1
+
+    if args.modulation_starts <= epoch <= args.modulation_ends:
+        for name, parms in model.named_parameters():
+            print('name:', name)
+            layer = str(name).split('.')[1]
+
+            if 'wsi' in layer and len(parms.grad.size()) == 4:
+                if args.modulation == 'OGM_GE':
+                    parms.grad = parms.grad * coeff_path + torch.zeros_like(parms.grad).normal_(0, parms.grad.std().item() + 1e-8)
+                elif args.modulation == 'OGM':
+                    parms.grad *= coeff_path
+
+            if 'sig' in layer and len(parms.grad.size()) == 4:
+                if args.modulation == 'OGM_GE':
+                    parms.grad = parms.grad * coeff_omic + torch.zeros_like(parms.grad).normal_(0, parms.grad.std().item() + 1e-8)
+                elif args.modulation == 'OGM':
+                    parms.grad *= coeff_omic
+    else:
+        pass
+
+
 
 def train_loop_survival(epoch, model, loader, optimizer, n_classes, writer=None, loss_fn=None, reg_fn=None, lambda_reg=0., gc=16, args=None):   
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu") 
@@ -20,8 +70,8 @@ def train_loop_survival(epoch, model, loader, optimizer, n_classes, writer=None,
         label = label.to(device)
         c = c.to(device)
 
-        hazards, S, Y_hat = model(x_path=data_WSI, x_omic=data_omic) # return hazards, S, Y_hat, A_raw, results_dict
-        
+        hazards, S, Y_hat, h_path, h_omic = model(x_path=data_WSI, x_omic=data_omic) # return hazards, S, Y_hat, A_raw, results_dict
+
         loss = loss_fn(hazards=hazards, S=S, Y=label, c=c)
         loss_value = loss.item()
 
@@ -43,6 +93,8 @@ def train_loop_survival(epoch, model, loader, optimizer, n_classes, writer=None,
         # backward pass
         loss = loss / gc + loss_reg
         loss.backward()
+
+        OGM_GE(args, epoch, model, h_path, h_omic)
 
         if (batch_idx + 1) % gc == 0: 
             optimizer.step()

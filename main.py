@@ -50,12 +50,14 @@ parser.add_argument('--start_epoch',              type=int,
                     default=0, help='start_epoch.')
 
 ### Model Parameters.
-parser.add_argument('--model_type',      type=str, choices=['snn', 'amil', 'mcat', 'motcat'], 
+parser.add_argument('--model_type', type=str, choices=['snn', 'amil', 'mcat', 'motcat'],
                     default='motcat', help='Type of model (Default: motcat)')
-parser.add_argument('--mode',            type=str, choices=['omic', 'path', 'pathomic', 'cluster', 'coattn'],
+parser.add_argument('--mode', type=str, choices=['omic', 'path', 'pathomic', 'cluster', 'coattn'],
                     default='coattn', help='Specifies which modalities to use / collate function in dataloader.')
-parser.add_argument('--fusion',          type=str, choices=[
-                    'None', 'concat'], default='concat', help='Type of fusion. (Default: concat).')
+parser.add_argument('--modulation', type=str,
+                    default='modulation')
+parser.add_argument('--fusion', type=str, choices=['None', 'concat', 'BFconcat'],
+                    default='concat', help='Type of fusion. (Default: concat).')
 parser.add_argument('--apply_sig',		 action='store_true', default=False,
                     help='Use genomic features as signature embeddings.')
 parser.add_argument('--apply_sigfeats',  action='store_true',
@@ -108,6 +110,11 @@ parser.add_argument('--ot_reg', 			 type=float, default=0.1,
                     help='epsilon of OT (default: 0.1)')
 parser.add_argument('--ot_tau', 			 type=float, default=0.5,
                     help='tau of UOT (default: 0.5)')
+
+parser.add_argument('--alpha', type=float,
+                    default=0.5, help='tau of UOT (default: 0.5)')
+parser.add_argument('--modulation_starts', default=5, type=int, help='where modulation begins')
+parser.add_argument('--modulation_ends', default=15, type=int, help='where modulation ends')
 
 args = parser.parse_args()
 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")

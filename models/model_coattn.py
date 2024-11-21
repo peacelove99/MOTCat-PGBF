@@ -46,6 +46,7 @@ class MCAT_Surv(nn.Module):
 
         ### Multihead Attention
         self.coattn = MultiheadAttention(embed_dim=256, num_heads=1)
+        # todo 修改self.coattn 1.输入h_path_bag和h_omic_bag平衡融合 2.输入h_path_bag和h_omic_bag和h_graph_bag平衡融合
 
         ### Path Transformer + Attention Head
         path_encoder_layer = nn.TransformerEncoderLayer(d_model=256, nhead=8, dim_feedforward=512, dropout=dropout, activation='relu')

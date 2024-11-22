@@ -291,7 +291,7 @@ class Generic_MIL_Survival_Dataset(Generic_WSI_Survival_Dataset):
                     genomic_features = torch.tensor(self.genomic_features.iloc[idx])
                     return (path_features, genomic_features, label, event_time, c)
 
-                elif self.mode == 'coattn':
+                elif self.mode == 'coattn' or self.mode == 'pgbf': # todo 临时补丁
                     path_features = []
                     for slide_id in slide_ids:
                         wsi_path = os.path.join(data_dir, 'pt_files', '{}.pt'.format(slide_id.rstrip('.svs')))

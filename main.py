@@ -50,9 +50,9 @@ parser.add_argument('--start_epoch',              type=int,
                     default=0, help='start_epoch.')
 
 ### Model Parameters.
-parser.add_argument('--model_type', type=str, choices=['snn', 'amil', 'mcat', 'motcat'],
+parser.add_argument('--model_type', type=str, choices=['snn', 'amil', 'mcat', 'motcat', 'motcat_pgbf'],
                     default='motcat', help='Type of model (Default: motcat)')
-parser.add_argument('--mode', type=str, choices=['omic', 'path', 'pathomic', 'cluster', 'coattn'],
+parser.add_argument('--mode', type=str, choices=['omic', 'path', 'pathomic', 'cluster', 'coattn', 'pgbf'],
                     default='coattn', help='Specifies which modalities to use / collate function in dataloader.')
 parser.add_argument('--modulation', type=str,
                     default='modulation')
@@ -279,7 +279,7 @@ def main(args):
         if 'omic' in args.mode or args.mode == 'cluster' or args.mode == 'graph' or args.mode == 'pyramid':
             args.omic_input_dim = train_dataset.genomic_features.shape[1]
             print("Genomic Dimension", args.omic_input_dim)
-        elif 'coattn' in args.mode:
+        elif 'coattn' in args.mode or 'pgbf' in args.mode: # todo 临时补丁
             args.omic_sizes = train_dataset.omic_sizes
             print('Genomic Dimensions', args.omic_sizes)
         else:

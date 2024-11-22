@@ -329,6 +329,8 @@ def get_custom_exp_code(args):
       param_code += 'MCAT'
     elif args.model_type == 'motcat':
       param_code += 'MOTCAT'
+    elif args.model_type == 'motcat_pgbf':
+      param_code += 'MOTCAT_PGBF'
     else:
       raise NotImplementedError
 
